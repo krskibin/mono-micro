@@ -1,0 +1,217 @@
+\chapter{Implementacja projektu - mikrousługi}
+\label{roz5}
+%=================================================================================================
+W tym rozdziale opisany zostanie proces implementacji czterech mniejszych usług składających się~w jedną całą aplikację. Podstawową różnicą między tymi serwisami, a podejściem monolitycznym jest to, że każda~z nich działać będzie jako osobny serwer zajmując inny port. Zamiast porozumiewania się między komponentami przy pomocy struktury klas, będzie odbywać się to poprzez żądania \textit{HTTP} i stworzony~w celu interfejs \textit{API}.
+
+\section{Zadania}
+Pierwszą opisaną mikrousługą jest ta odpowiedzialna za zarządzanie zadaniami. Jest to osobna aplikacja napisana~w bibliotece \textit{Flask}. Podobnie jak~w przypadku usługi monolitycznej ma ona połączenie~z bazą danych przy pomocy \textit{ORMu}. Model zadania jest identycznie stworzony jak~w poprzednim projekcie. Korzystając~z biblioteki \textit{Flask-SQLAlchemy} tworzona jest instancja jej głównej klasy, do której przekazano obiekt \textit{app}, a następnie szablon klasy \textit{Task}. Różnicą jest to, że posiada ona metodę \textit{to\_dict}, której zadaniem jest zwracanie słownika~z wszystkimi polami, które będą dostępne dla klienta interfejsu \textit{API}. W związku~z tym, że wspomniany interfejs powinien być zgodny~z standardem \textit{JSON}, to nazwy kluczy~w słowniku są zapisane~w inny sposób niż standardowy dla języka \textit{Python}, a zgodny~z tym~w języku \textit{Javascript}\footnote{W języku \textit{Python} obwiązujący standard zapisywania nazw zmiennych to \textit{snake\_case}\cite{python}, gdzie poszczególne wyrazy odróżnia się poprzez podkreślnik. Natomiast~w języku \textit{Javascript} odbywa się to wyróżniając pierwszą literę drugiego słowa jako dużą. Konwencja ta nazwana jest \textit{camelCase}. Link do reszty informacji: \url{https://firefox-source-docs.mozilla.org/code-quality/coding-style/coding_style_js.html}.}. Pozwali to~w przyszłości na łatwiejsze operowanie danymi wewnątrz usługi odpowiedzialnej za interfejs użytkownika.
+
+W związku~z tym, że każda~z poszczególnych aplikacji korzysta~z tej samej usługi bazodanowej ale innych baz, to należy~w pliku \textit{.env} dodać nową nazwę dla niej. Niestety nie zostanie ona stworzona automatycznie~i należy wykorzystać komendę \verb|psql -U postgres| i po uruchomieniu programu dodać nową bazę danych przy pomocy komendy \verb|CREATE DATEABASE postgrestasks;|. Takie rozwiązanie tworzy też kolejny problem, nie jest możliwe korzystanie~z relacji między poszczególnymi usługami. Zadania~i użytkownicy nie mogą być~z sobą powiązani przez klucz obcy. \textit{Flask-SQLAlchemy} udostępnia mechanizm \textit{binds}, który~w ramach zewnętrznego systemu pozwala tworzyć takie relacje\cite{flasksql}, ale odpowiednia implementacja tego mechanizmu jest dość trudna dla kilku mikrousług korzystających~z różnych baz danych. Struktura aplikacji tego nie wymaga, odpowiednio przygotowując funkcję odpowiedzialną za tworzenie zadań można przypisywać do nich \textit{identyfikator} użytkownika na podstawie przesłanych \textit{tokenów}. Zapewnią one integralność~i to, że te dane nie będą dostępne publicznie.
+
+\begin{lstlisting}[language=Python, caption={Model zadania w mikrousłudze \textit{tasks} wraz z metodą \textit{to\_dict}.}]
+class Task(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    is_done = db.Column(db.Boolean)
+    header = db.Column(db.String(68))
+    body = db.Column(db.String(256))
+    user_id = db.Column(db.Integer)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'isDone': self.is_done,
+            'header': self.header,
+            'body': self.body,
+            'timestamp': self.timestamp
+        }
+\end{lstlisting}
+
+Najważniejszą warstwą mikrousługi serwerowej jest \textit{API}. Odpowiadają za nie funkcje, które podobnie jak~w aplikacji monolitycznej otrzymują żądania~i odsyłają odpowiedzi. Nie są to natomiast odpowiedzi~w formie renderowanych szablonów, a obiektów typu \textit{JSON}. Biblioteka \textit{Flask} posiada metodę~o nazwie \textit{jsonify}, która pozwala~w łatwy sposób na przesyłanie odpowiedzi~w tej formie. Inną istotną sprawą jest utrzymanie spójnej struktury dla \textit{URLów} takich zapytań. W projekcie przyjęta będzie konwencja, gdzie żądany obiekt~w tym przypadku \textit{task} będzie przesyłany jako lista, gdy klient wyśle zapytanie \textit{GET} pod adres \verb|\tasks| (tu możliwe jest podanie parametrów zapytań do ich odfiltrowania). Dla metody {POST} z podanymi odpowiednimi danymi możliwe będzie stworzenie nowego celu, gdy potrzebne będzie poszczególne zadanie, wówczas wystarczy odpytanie adresu \verb|tasks/<int:id>|, gdzie \verb|<int:id>| odpowiada jego identyfikatorowi. Ten adres~w zależności od rodzaju zapytania będzie odpowiadać za usunięcie lub uaktualnienie podanego celu użytkownika.
+W tej usłudze zapytanie kierowane na adres \verb|\|, \verb|\index| zwracać będzie wiadomość powitalną informującą~o rodzaju danych serwowanych przez aplikację. 
+  
+ \begin{lstlisting}[language=Python, caption={Funkcja \textit{index} zwracająca obiekt \textit{JSON}.}]
+@app.route('/', method=['GET'])
+@app.route('/index', method=['GET'])
+def index():
+    return jsonify(message="Welcome to task micro-service", success=True)
+\end{lstlisting}
+
+Nadal możliwe jest sprawdzenie zwróconych danych~w przeglądarce, wystarczy uruchomić aplikację~i~w pasu wyszukiwania wpisać \url{http://localhost:5000}, wówczas powinien zostać wyświetlony obiekt \textit{JSON}. Dla prostych zapytań typu \textit{GET} możliwe jest ich takie podejrzenie. Problemem jest przetestowanie innych metod \textit{HTTP}, ale istnieją do tego narzędzia takie jak prosty program konsolowy \textit{cURL} (\url{https://curl.haxx.se/}) lub okienkowa aplikacja \textit{Postman} (\url{https://www.postman.com/}).
+
+\begin{lstlisting}[language=bash, caption={Testowe zapytanie wykonane przy pomocy programu \textit{cURL} w terminalu systemu \textit{Unix}.}]
+$user@home: curl -i -H "Content-Type: application/json" http://localhost:5001/tasks
+
+HTTP/1.0 200 OK
+Content-Type: application/json
+Content-Length: 59
+Server: Werkzeug/1.0.1 Python/3.8.3
+Date: Sun, 07 Jun 2020 19:58:18 GMT
+
+{"message":"Welcome to task micro-service","success":true}
+\end{lstlisting}
+
+Każde zapytanie~o jakiekolwiek zadanie wymaga autentykacji (więcej~w rozdziale \ref{sec:autentykacja}) jest to warunek konieczny do jego otrzymania. Założenia aplikacji wykluczają możliwość podglądania zadań innych użytkowników, dlatego każda funkcja widoku najpierw sprawdza, czy obiekt \textit{request}\cite{flask} posiada nagłówek\cite{http} \textit{Authentication}, w którym jest token. Gdyby go nie było, to zwracana jest wiadomość~o braku autoryzacji, jeśli jest, to aplikacja kontaktuje się~z usługą odpowiedzialną za uwierzytelnianie~i pod adres \verb|/token-decode| wysyłany jest wspomniany wcześniej token. Następnie jeżeli wszystko jest~w porządku, to~w odpowiedzi usługa dostaje identyfikator użytkownika, który następnie jest wykorzystywany do tworzenia kwerend bazy danych. Dobrym przykładem może być widok odpowiedzialny za listowanie wszystkich zadań.
+
+\begin{lstlisting}[language=Python, caption={Kod widoku odpowiedzialnego za listowanie zadań.}]
+@app.route('/tasks', methods=['GET'])
+def get_tasks():
+    auth_header = request.headers.get('Authorization')
+    user_id = auth_user(auth_header)
+    if not isinstance(user_id, int):
+        return jsonify(message='Authentication failed', success=False)
+
+    tasks_list = Task.query.filter_by(user_id=user_id)
+    return jsonify(tasks=[selected_task.to_dict() for selected_task in tasks_list], success=True)
+\end{lstlisting}
+
+Po otrzymaniu identyfikatora użytkownika sprawdzane jest, czy \textit{user\_id} jest typu numerycznego, tak aby upewnić się, czy to co zwróciła kontaktująca się~z serwisem od uwierzytelniania usługa jest informacją poprawną, którą można wykorzystać do wyszukiwania zadań. Korzystając~z mechanizmu kwerend biblioteki \textit{Flask-SQLAlchemy} wybierane są tylko cele należące do użytkownika wysyłającego zapytanie, a następnie przy pomocą mechanizmu przekształcania list (ang. \textit{list comprehension})\cite{python} wszystkie zadania są zamieniane na słowniki\footnote{Proces ten nazywany jest serializacją danych. W frameworkach takich jak \textit{Django} istnieją gotowe mechanizmy odpowiedzialne za ten mechanizm\cite{django}.}, umieszczane~w tablicy~i wysyłane przy pomocy funkcji \textit{jsonify}. Jest ona odpowiednikiem stworzenia nowego obiektu typu \textit{Request} do którego przekazany jest obiekt \textit{JSON}, stworzony przy wykorzystaniu standardowej biblioteki \textit{json} i metody \textit{dumps}\cite{flask}.
+
+Poza funkcjami widoku, które wykorzystują metodę \textit{GET} są jeszcze adresy odpowiedzialne za tworzenie nowego zadania. Wówczas do parametru \textit{methods} przekazywana jest tablica~z ciągiem znaków, \textit{POST}. Wewnątrz tej funkcji poza sprawdzeniem poprawności tokenu, przeglądany jest obiekt \textit{request.json}, czy posiada on klucz \textit{header}, który jest jedynym wymaganym polem do utworzenia nowego zadania. Następnie otrzymane informacje są wykorzystane do utworzenia zadania, a jego dane są zwracane~w odpowiedzi.
+\begin{lstlisting}[language=bash, caption={Testowe zapytanie \textit{POST} wykonane przy pomocy programu \textit{cURL} w terminalu systemu \textit{Unix}.}]
+$user@home: curl -i -H "Content-Type: application/json" -H "Authorization: Bearer token_uzytkownika "  -X POST -d '{"header":"Read the docs"}' http://localhost:5001/tasks
+
+HTTP/1.0 200 OK
+Content-Type: application/json
+Content-Length: 127
+Server: Werkzeug/1.0.1 Python/3.8.3
+Date: Sun, 07 Jun 2020 19:49:25 GMT
+
+{"success":true,"task":{"body":"","header":"Read the docs","id":2,"isDone":false,"timestamp":"Sun, 07 Jun 2020 19:49:25 GMT"}}
+\end{lstlisting}
+
+
+W usłudze zaimplementowany jest również mechanizm aktualizacji celów, wówczas należy pod adres \verb|/tasks/<int:task_id>| wysłać żądanie \textit{PUT}. Cała procedura jest podobna jak ta do tworzenia nowego zadania, ale~w obiekcie \textit{request.json} sprawdzane jest, czy zostały przesłane wszystkie edytowalne pola wykorzystywane przy jego tworzeniu.
+
+Ostatnim typem żądania jest usunięcie zadania, wówczas wykorzystywaną metodą jest \textit{DELETE}, a~w parametrze potrzebny jest jego number. Po uwierzytelnieniu, tworzona jest kwerenda, która odnajduje zadanie~o podanym identyfikatorze dla danej osoby. Możliwe jest to przy pomocy kwerendy \textit{AND}, którą łatwo implementuje się podając następne parametry funkcji \textit{filter\_by}. Po znalezieniu zadania wykorzystywana jest funkcja obiektu \textit{db.session} o nazwie \textit{delete}, a po zatwierdzeniu operacji wysyłana jest informacja~o usunięciu zadania wraz~z jego danymi.
+\newpage
+\begin{lstlisting}[language=Python, caption={Kod widoku odpowiedzialnego za usuwanie zadań.}]
+@app.route('/tasks/<int:task_id>', methods=['DELETE'])
+def delete_task(task_id):
+	# czesc odpowiedzialna za uwierzytelnianie tokenu
+	# ... 
+    try:
+        task_to_delete = Task.query.filter_by(
+        		id=task_id,
+         	user_id=user_id
+        ).first()
+        db.session.delete(task_to_delete)
+        db.session.commit()
+    except:
+        return jsonify(
+        		message="Cannot deleted task " + str(task_id),
+        		sucess=False
+        	)
+    return jsonify(
+    	message="Task deleted",
+    	task=task_to_delete.to_dict(),
+    	sucess=True
+    )
+ \end{lstlisting}
+W razie jakichkolwiek błędów wszystkie wspomniane funkcję zwracają odpowiednie komunikaty wraz z informacją~o niepowodzeniu. Wykorzystując dekorator \textit{errorhandler} można również stworzyć odpowiedzi dla wszelkiego rodzaju błędów, których nie można obsłużyć wewnątrz zaimplementowanych widoków, takich jak skorzystanie~z nieistniejącego \textit{URLa} przez użytkownika\cite{flask}.
+
+\begin{lstlisting}[language=Python, caption={Wykorzystanie dekoratora \textit{errorhander} do nadpisania kodu błędu \textit{404}.}]
+@app.errorhandler(404)
+def wrong_entrypoint(error):
+    return jsonify(
+    	error="API entrypoint not found",
+    	success=False
+    ), 404 
+\end{lstlisting}
+
+\section{Użytkownicy}
+Kolejna potrzebną usługą jest ta odpowiedzialna za zarządzenie użytkownikami. Posiada ona także dostęp do bazy danych~z wykorzystaniem modułu \textit{Flask-SQLAlchemy}. Utworzone modele mają taką samą strukturę co~w aplikacji monolitycznej, jednak nie posiadają relacji~z zadaniami, ze względu na użycie wcześniej wspomnianego mechanizmów \textit{tokenów} nie ma potrzeby przechowywania żadnych relacji.
+
+Głównym zadaniem tej mikrousługi jest tworzenie nowych użytkowników, zarządzenie ich logowaniem, wysyłaniem odpowiednich informacji~o nich. W tym celu zaimplementowano niżej określony schemat \textit{REST API}:
+\begin{itemize}
+  \item \verb|/|, \verb|/index| - zwraca metodą \textit{GET} informację, że podany \textit{URL} odnosi się do mikrousługi odpowiedzialnej za użytkowników.
+  \item \verb|/users| - dla metody \textit{GET} jeżeli klient prześle poprawny \textit{token}, to zwraca informację takie jak email, nazwa użytkownika. Natomiast żądanie \textit{POST} tworzy nowego użytkownika~i zwraca dla niego \textit{token}, tak, aby mógł on mieć dzięki niemu dostęp do reszty funkcji aplikacji.
+  \item \verb|/login| - wysyłając pod ten adres aplikacji żądanie \textit{POST} użytkownik może się zalogować. Po udanym procesie przesyłany jest nowy \textit{token} do uwierzytelniania.
+  \item \verb|/logout| - pod tym adresem możliwe jest wylogowanie użytkownika, wówczas przesłany token wysyłany jest do usługi uwierzytelniającej~i tam dodawany do czarnej listy, tak aby nigdy więcej nie można było go użyć do korzystania~z funkcji dostępnych wyłącznie dla zalogowanej osoby.
+\end{itemize}
+
+Szczegółowa implementacja widoków jest podobna do tej~z usługi odpowiedzialnej za zadania. W każdym~z nich, gdzie wymagany jest \textit{token} najpierw sprawdzana jest jego poprawność, w razie braku,  zwracana jest odpowiednia wiadomość. Może zdarzyć się, że z jakiejś przyczyny token wygaśnie, wówczas aplikacja odpowiadająca za interfejs użytkownika automatycznie wyloguje go, tak aby użytkownik znów się zalogował przypisując mu nowo stworzony \textit{token}. Następnie na podstawie danych~z tokenu wybierany jest użytkownik~z bazy danych, a następnie odpowiednie dane są zwracane. Istnieją również adresy, gdzie przesyłane są dane~i sprawdzane jest, czy przyjęte do serwera żądanie posiada~w sobie wymagane informacje, w przeciwnym razie zwracana jest wiadomość~o błędzie. W funkcjach, gdzie tworzone są \textit{tokeny} przesyłane jest zapytanie do serwera tej usługi pod adres \verb|/token-encode| z identyfikatorem użytkownika jako parametrem. Wówczas tworzony jest ciąg binarny, kodowany później na klucz uwierzytelniający~i przesyłany jako odpowiedź serwera. Następnie~w odpowiednio sformatowanej informacji wysyłany jest on do klienta pod kluczem \textit{tokenAuth}.
+Ostatnią istotną różnicą~w widokach jest wylogowywanie, metoda odpowiedzialna za nie jest podobnie zbudowana do \textit{get\_user} z tą różnicą, że adresem pod który serwer wysyła token to \verb|/token-blacklist|, który natomiast~w informacji zwrotnej potwierdza wylogowanie, gdy posiada ona status \textit{success} to przekazywane jest to klientowi, wówczas może on bezpiecznie usunąć nieaktualny token.
+
+\section{Autentykacja}
+\label{sec:autentykacja}
+Autentykacja jest usługą pośrednią między listą zadań, a użytkownikami. Nie posiada ona otwartego portu\footnote{Wewnątrz kontenerów \textit{Dockera} można wskazać adres~z którego aplikacja będzie widoczna dla klienta\cite{docker}.}, aby była ona widoczna zewnątrz kontenera co sprawia, że kontakt~z nią jest jedynie możliwy wewnątrz wspólnego klastra kontenerów, stanowi to dodatkową warstwę zabezpieczeń. 
+
+Inną istotną sprawą jest \textit{secret key}\cite{flask}, czyli ciąg znaków, który powinien być trzymany~w tajemnicy~i jest to ważny element tej usługi. Do generowania \textit{tokenów} wykorzystuje ona mechanizm \textit{JWT}\footnote{skrót od \textit{JSON Web Tokens}, jest to metoda uwierzytelniania wykorzystująca obiekty \textit{JSON} do bezpiecznej transmisji danych, więcej informacji~o \textit{JWT} można znaleźć na stronie: \url{https://jwt.io/introduction/}.}. Do szyfrowania informacji~i ich odszyfrowania korzysta się właśnie~z \textit{secret key}, to on stanowi gwarancję tego, że podane dane będą odszyfrowane~i zaszyfrowane pomyślnie. Wyciek wspomnianego ciągu znaków stanowi poważne zagrożenie dla poufności danych całego serwisu~i~w tym przypadku powinien on być natychmiastowo zastąpiony innym. Dla bezpieczeństwa takie klucze powinny być bardzo długą sekwencją losowych znaków\cite{flask}, których nie powinno się dać zapamietać\footnote{Więcej informacji~o generowaniu odpowiednich \textit{secret key} można znaleźć~w dokumentacji \textit{Flaska}\cite{flask}.}. Aplikacja wykorzystuje bibliotekę \textit{PyJWT}\footnote{Link do dokumentacji \textit{PyJWT}: \url{https://pyjwt.readthedocs.io/en/latest/}.} do tworzenia tokenów \textit{JWT}.
+
+
+Widok odpowiedzialny za szyfrowanie kluczy ma adres \verb|/token_encode|, wewnątrz niego sprawdzane jest, czy otrzymał on żądanie~z identyfikatorem użytkownika (dzięki temu, że usługa dostępna jest wewnątrz kontenera, to niemożliwe jest przesłanie fałszywego identyfikatora~z zewnątrz), gdy metoda potwierdzi, że przyjęty format danych jest prawidłowy, to tworzony jest obiekt \textit{payload}. Zawiera on pola \textit{exp} z datą wygaśnięcia klucza, \textit{iat}, pole posiadające datę jego utworzenia~i \textit{user\_id}, identyfikator użytkownika\cite{Herman:2017}. Wszystkie te dane zostaną zaszyfrowane przy pomocy metody \textit{jwt.encode}, gdzie poza \textit{payload} przekazany jest również \textit{secret key} i rodzaj algorytmu wykorzystanego do zabezpieczenia danych. W tym przypadku jest to \textit{HS256}\footnote{Więcej~o algorytmach wykorzystywanych do szyfrowania \textit{tokenów} pod adresem: \url{https://jwt.io/}.}. Generuje on ciąg bajtów, których nie da się przesłać przez protokół \textit{HTTP}, dlatego przed wysłaniem powinno się na nim wywołać funkcję \textit{decode}.
+
+Do odszyfrowania \textit{tokenu} wykorzystywany jest widok \verb|/token-decode|, otrzymuje on zaszyfrowany klucz~w obiekcie \textit{JSON}, następnie sprawdza, czy obiekt znajduje się~w bazie na czarnej liście (\textit{ang. blacklist}), jeśli nie, to jest odszyfrowywany przy pomocy metody \textit{jwt.decode}. Cała procedura zamknięta jest~w bloku \textit{try...except}, służy on do wyłapywania błędnych \textit{wyjątków}, a następnie~w kolejnym bloku są one odpowiednio obsługiwane\cite{python}. Aplikacja oczekuje błędu \textit{ExpiredSignatureError} i \textit{InvalidTokenError}, gdy jeden z nich wystąpi, to odsyłane są odpowiednie komunikaty~o błędzie, jeżeli nie, to odszyfrowane wiadomości~z tokenu są wysyłane~z powrotem.
+
+Aplikacja posiada prosty model służący do przetrzymywania \textit{tokenów}, tak aby~w razie wylogowania użytkownika zachować ten klucz~w bazie~i~w razie potrzeby sprawdzić, czy nie został już wykorzystany. Klasa ta posiada takie pola jak \textit{id}, \textit{token}, który jest ciągiem znaków~o długości \textit{500} i \textit{blacklisted\_on}, które zachowuje informacje~o dacie, kiedy klucz został dodany do bazy danych. Wówczas klient wylogowując się przesyła obecny \textit{token} pod adres \verb|/token-blacklist|, gdzie następnie jest deszyfrowany, aby sprawdzić, czy dane~w nim są prawidłowe~i jeżeli są, to wtedy token zostaje zapisany, a usługa zarządzająca użytkownikami dostaje informacje~o pomyślnym zakończeniu procesu.
+
+\section{Interfejs użytkownika}
+\label{sec:ui}
+W przypadku interfejsu użytkownika, będą to statyczne pliki serwowane przez \textit{Nginx}, ale~w celu rozwijania takich aplikacji powstały zestawy narzędzi, które to ułatwiają. Istnieją pakiety pozwalające na wygenerowanie skonfigurowanych projektów. W przypadku platformy \textit{Nuxt.js}, czyli biblioteki do statycznego renderowania stron~w \textit{Vue.js} jest to \textit{nuxt-create-app}\cite{nuxtjs}. Z pomocą tej aplikacji została stworzona stosowna struktura projektu~i wybrany zestaw programów wykorzystywanych~w ramach niego, takich jak odpowiedni preprocesor do plików \textit{CSS}, biblioteka \textit{ElementUI}. W celu zapewnienia dodatkowych opcji doinstalowano przy pomocy narzędzia \textit{Yarn}\footnote{Link do dokumentacji narzędzia \textit{Yarn}: \url{https://yarnpkg.com}.} takie moduły jak \textit{@nuxt/http} i \textit{@nuxtjs/proxy}. Nazwy tych narzędzi należało podać~w pliku \textit{nuxt.config.js} w sekcji \textit{modules}. Moduł \textit{Proxy} pozwala na skonfigurowanie~w tym samym pliku, gdzie jest informacja~o jego wykorzystaniu, poprzez dodanie obiektu \textit{proxy}, prostego przekierowania adresów, wówczas gdy zostanie odpytany serwer developerski~o \textit{URL} podany~w konfiguracji, to automatycznie przekieruje on żądanie do jednej~z aplikacji \textit{Flaska}.
+\begin{lstlisting}[language=Javascript, caption={Fragment pliku \textit{nuxt.config.js} z konfiguracją obiektu \textit{proxy}.}]
+  /*
+  ** Nuxt.js modules
+  */
+  modules: [
+    '@nuxt/http',
+    '@nuxtjs/proxy',
+  ],
+  proxy: {
+    '/tasks-api': {
+      target: 'http://tasks:5000/',
+      pathRewrite: {
+        '^/tasks-api': '/'
+      },
+    },
+    '/users-api': {
+      target: 'http://users:5000/',
+      pathRewrite: {
+        '^/tasks-users' : '/'
+      }
+    },
+  },
+\end{lstlisting}
+
+\textit{Nuxt.js} wykorzystuje mechanizm renderowania plików po stronie serwera (ang. \textit{Server Side Rendering}), co~w rezultacie odpowiada za to, że każda ścieżka~w aplikacji będzie oddzielnym plikiem \textit{HTML}\cite{nuxtjs}. Pliki odpowiedzialne za generowanie takich ścieżek są~w projekcie umiejscowione~w katalogu \verb|pages/|. W przypadku list zadań potrzebne jest jednak dynamiczne generowanie adresów. \textit{Nuxt.js} również posiada taki mechanizm\cite{nuxtjs}. Wówczas należy stworzyć wewnątrz omówionego folderu kolejny~o nazwie odpowiadającej pożądanej ścieżce~i wewnątrz umieścić plik \textit{index.html}, to on będzie renderowany, gdy użytkownik poda~w pasku przeglądarki \verb|/tasks/| (dla listy zdań). Gdy będzie potrzebował celu~o określony identyfikatorze, wtedy należy utworzyć wewnątrz tego folderu plik~o nazwie \textit{\_id.vue}. Taką strukturę~w nazwie aplikacja \textit{Nuxt.js} identyfikuje jako szablon, który należy wczytać przy podaniu adresu \verb|/tasks/1|. Argument przekazany w adresie \textit{URL} framework rzutuje na zmienną o nazwie \textit{id} we wczytanym pliku \textit{HTML}\cite{nuxtjs}.
+
+Do zarządzania ścieżkami, aby nie były one dostępne dla niezalogowanego użytkownika wykorzystano mechanizm \textit{middleware}\cite{nuxtjs}. Jest to zestaw funkcji, które można bezpośrednio wywołać przed przejściem użytkownika na inny adres. Wewnątrz nich sprawdzane będzie, czy klient ma zapisany~w globalnej zmiennej przeglądarki \textit{localStorage}, która przechowuje informacje~z danej witryny aż do zamknięcia sesji przeglądarki\cite{mdn}, \textit{token}, jeżeli tak to korzystając modułu~z \textit{@nuxt/http} do argumentu obiektu globalnego aplikacji \textit{Nuxt.js}, \textit{\$http} jest on dołączany przy pomocy metody \textit{setToken}.
+
+Po dodaniu do nagłówka sekcji uwierzytelnienia możliwe jest pobieranie danych~z zabezpieczonych adresów aplikacji serwerowej. W przypadku braku możliwości pozyskania tokenów lub, gdy serwer zwróci błąd przy jego odszyfrowaniu, to przy wykorzystaniu argumentu funkcji \textit{middleware}, \textit{context} i metody \textit{redirect} należy użytkownika przekierować do strony logowania, tak aby zalogował się on jeszcze raz~i pobrał nowy \textit{token}.
+
+Biblioteka \textit{@nuxt/http} pozwala~w prosty sposób na pobieranie~i wysyłanie żądań do aplikacji serwerowych, korzystając~z funkcji \textit{fetch} wewnątrz komponentu\cite{nuxtjs}. Posiada ona również zestaw metod, dzięki którym można sprawdzić stan zapytania~i~w zależności od jego wyniku wysłać odpowiednie komunikaty.
+
+\begin{lstlisting}[language=Javascript, caption={Przykład komponentu wczytującego listę zadań.}]
+<template>
+  <div>
+   	<p v-if="$fetchState.pending">Fetching posts...</p>
+   	<p v-else-if="$fetchState.error">
+   		Error while fetching posts: {{ $fetchState.error.message }}
+   	</p>
+    <ul v-else>
+       <li v-for="task of tasks" :key="task.id">
+       	<n-link :to="`/tasks/${task.id}`">
+       		{{ task.header }} {{ task.body }} {{ task.isDone }} </n-link>
+       </li>
+   </ul>
+  </div>
+</template>
+<script>
+//...
+export default {
+  data () {
+    return {
+      tasks: []
+    }
+  },
+  async fetch () {
+    const request = await this.$http.$get('tasks-api/tasks')
+    if (request.success) {
+      this.tasks = request.tasks
+    }
+  }
+}
+</script>
+\end{lstlisting}
+
+Wykorzystanie prostego serwera \textit{proxy} sprawiło, że nie jest potrzebne podawanie całego adresu, a wystarczy jedynie, aby aplikacja wysłała żądanie pod odpowiedni \textit{URL} w swojej domenie. Mechanizm odpowiedzialny za przekierowywanie wyśle to zapytanie do jednej~z aplikacji serwerowych.

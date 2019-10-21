@@ -1,0 +1,59 @@
+MONO
+
+boom 'http://localhost/index' -c 100 -n 1000\
+  -header 'Cookie:sw-context-token=n97DGc9NyF1dwsyQ6O5DWCCRHWlAVW1x; vsf-locale=en; session=.eJwljklqBDEMAP_icw7abMnzmUaWZBICCXTPnEL-noYcq6Cgftqxz7re2-N5vuqtHR_ZHm1wrUgBgIqSxYKstuYARGXDGcsX5USYVEKjY81idFGiYUE-PXiqhfCdkjGtjttUyxFCQ32sZPZkk7SY2ns5bQlKHYYA7R55XXX-3-CNcZ37eH5_1tctlIQoOqJrVC_A4iXkUB4zMTez7iLi9vsHH-c9-Q.XuOMIQ.KcvtNydeko1DCFduDpBdwfPg0Eo'
+
+Sprawdzanie zadania
+http://localhost:80/tasks -c 100 -n 1000 \
+-m GET \
+--header 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
+--header 'Cookie: session=.eJwljktqBDEMBe_idRaWLNnWXKaR9WGGQALdM6uQu49DlvV4UPVTjjzjupfb83zFRzkeXm4l1tSuDYSoiSsPjNE7CbYAnZvZRXpUBgVjMVUamOlJabCATWr6TAtWM5w4IckmVh-zg3tFAV3IZuGtdunqijF7hdnG36HskNcV538NbLTrzOP5_RlfeyAKD7EqvSZNR5QM1EVMK7uv7WChJVx-3xsZP8E.XuNfOg.9FyzBsHxZ0JiRdTOEHgvsR3d37E' \
+
+Tworzenia zadania
+boom 'http://localhost/tasks' -c 100 -n 1000 -m POST \
+  --header 'Cookie:sw-context-token=n97DGc9NyF1dwsyQ6O5DWCCRHWlAVW1x;vsf-locale=en;session=.eJwljklqBDEMAP_icw7abMnzmUaWZBICCXTPnEL-noYcq6Cgftqxz7re2-N5vuqtHR_ZHm1wrUgBgIqSxYKstuYARGXDGcsX5USYVEKjY81idFGiYUE-PXiqhfCdkjGtjttUyxFCQ32sZPZkk7SY2ns5bQlKHYYA7R55XXX-3-CNcZ37eH5_1tctlIQoOqJrVC_A4iXkUB4zMTez7iLi9vsHH-c9-Q.XuNrRQ.s8jmMuRrzZLpTLYDwfKLLX2OvsA' \
+  --data 'csrf_token=IjcyNDIyYzUxMWE3Y2U1ZTAxZTNiNDJhMGVhYzlkMWRmMzM3ZmUyMjMi.XuNrpA.M0uB63xmiW12JAmGlVuji9jlFDY&header=aaa&body=aaa&submit=Create+task
+'
+
+Usuwanie
+boom 'http://localhost/task/$i' -c 100 -n 1000 -m DELETE \
+  --header 'Cookie:sw-context-token=n97DGc9NyF1dwsyQ6O5DWCCRHWlAVW1x;vsf-locale=en;session=.eJwljklqBDEMAP_icw7abMnzmUaWZBICCXTPnEL-noYcq6Cgftqxz7re2-N5vuqtHR_ZHm1wrUgBgIqSxYKstuYARGXDGcsX5USYVEKjY81idFGiYUE-PXiqhfCdkjGtjttUyxFCQ32sZPZkk7SY2ns5bQlKHYYA7R55XXX-3-CNcZ37eH5_1tctlIQoOqJrVC_A4iXkUB4zMTez7iLi9vsHH-c9-Q.XuNrRQ.s8jmMuRrzZLpTLYDwfKLLX2OvsA'
+
+Edytowanie
+boom 'http://localhost/task/1' -c 100 -n 1000 -m POST \
+  --header 'Cookie:sw-context-token=n97DGc9NyF1dwsyQ6O5DWCCRHWlAVW1x; vsf-locale=en; session=.eJwljklqBDEMAP_icw7abMnzmUaWZBICCXTPnEL-noYcq6Cgftqxz7re2-N5vuqtHR_ZHm1wrUgBgIqSxYKstuYARGXDGcsX5USYVEKjY81idFGiYUE-PXiqhfCdkjGtjttUyxFCQ32sZPZkk7SY2ns5bQlKHYYA7R55XXX-3-CNcZ37eH5_1tctlIQoOqJrVC_A4iXkUB4zMTez7iLi9vsHH-c9-Q.XuOGug.i6CJZeg_N7u8pITZzNDBcf3jBAw
+' \
+  --data 'csrf_token=IjcyNDIyYzUxMWE3Y2U1ZTAxZTNiNDJhMGVhYzlkMWRmMzM3ZmUyMjMi.XuOFMg.xrKtXNtibsM4AYPTOi6qY-bBF8o&header=hello&body=hello&is_done=y&submit=Update'
+
+Logout:
+boom 'http://localhost/logout' -c 100 -n 1000 \
+  --header 'Cookie:sw-context-token=n97DGc9NyF1dwsyQ6O5DWCCRHWlAVW1x; vsf-locale=en; session=.eJwljklqBDEMAP_icw7abMnzmUaWZBICCXTPnEL-noYcq6Cgftqxz7re2-N5vuqtHR_ZHm1wrUgBgIqSxYKstuYARGXDGcsX5USYVEKjY81idFGiYUE-PXiqhfCdkjGtjttUyxFCQ32sZPZkk7SY2ns5bQlKHYYA7R55XXX-3-CNcZ37eH5_1tctlIQoOqJrVC_A4iXkUB4zMTez7iLi9vsHH-c9-Q.XuOGug.i6CJZeg_N7u8pITZzNDBcf3jBAw
+'
+
+Register:
+boom 'http://localhost/register' -c 100 -n 1000 \
+  --data 'csrf_token=IjcyNDIyYzUxMWE3Y2U1ZTAxZTNiNDJhMGVhYzlkMWRmMzM3ZmUyMjMi.XuOIuA.f1QTeLwgiHlQWeWsd01USwLp-g4&username=herman&email=herman%40gw.pl&password=herman&password2=herman&submit=Register'
+
+Login:
+boom 'http://localhost/login' -c 100 -n 1000 -m POST\
+  --header 'Cookie:sw-context-token=n97DGc9NyF1dwsyQ6O5DWCCRHWlAVW1x; vsf-locale=en; session=eyJfZnJlc2giOmZhbHNlLCJjc3JmX3Rva2VuIjoiNzI0MjJjNTExYTdjZTVlMDFlM2I0MmEwZWFjOWQxZGYzMzdmZTIyMyJ9.XuOJxA.YoYr6n0GjiBV7aASYgAENPZacJ8' \
+  --data 'csrf_token=IjcyNDIyYzUxMWE3Y2U1ZTAxZTNiNDJhMGVhYzlkMWRmMzM3ZmUyMjMi.XuOJxA.wXx4zdBSWTyUynHWXNe_SPvHj18&username=admin&password=admin&submit=Sign+In'
+
+
+boom 'http://localhost/login' -c 100 -n 1000 -m POST \
+ - data 'csrf_token=IjcyNDIyYzUxMWE3Y2U1ZTAxZTNiNDJhMGVhYzlkMWRmMzM3ZmUyMjMi.XuOMxg.KH2QV_Vf67FY8XUPvI6p0IflfNU&username=admin&password=admin&submit=Sign+In' 
+
+
+Register:
+boom 'http://localhost/login' -c 100 -n 1000 -m POST \
+  --data-raw 'csrf_token=IjcyNDIyYzUxMWE3Y2U1ZTAxZTNiNDJhMGVhYzlkMWRmMzM3ZmUyMjMi.XuONmQ.mXMQnEQkrWq512uTBIRaGrjujEM&username=here&email=here%40herre.pl&password=here&password2=here&submit=Register' \
+  --compressed
+
+Wyloguje
+boom 'http://localhost/logout' -c 100 -n 1000 \
+  --header 'Cookie: sw-context-token=n97DGc9NyF1dwsyQ6O5DWCCRHWlAVW1x; vsf-locale=en; session=.eJwljklqBDEMAP_icw7abMnzmUaWZBICCXTPnEL-noYcq6Cgftqxz7re2-N5vuqtHR_ZHm1wrUgBgIqSxYKstuYARGXDGcsX5USYVEKjY81idFGiYUE-PXiqhfCdkjGtjttUyxFCQ32sZPZkk7SY2ns5bQlKHYYA7R55XXX-3-CNcZ37eH5_1tctlIQoOqJrVC_A4iXkUB4zMTez7iLi9vsHH-c9-Q.XuOONg.W2s5AE4fi_cgx2p8qvlmUpw4GlI'
+
+
+Zadania
+boom 'http://localhost/tasks' -c 100 -n 1000 \
+  -header 'Cookie:sw-context-token=n97DGc9NyF1dwsyQ6O5DWCCRHWlAVW1x; vsf-locale=en; session=.eJwljklqBDEMAP_icw7abMnzmUaWZBICCXTPnEL-noYcq6Cgftqxz7re2-N5vuqtHR_ZHm1wrUgBgIqSxYKstuYARGXDGcsX5USYVEKjY81idFGiYUE-PXiqhfCdkjGtjttUyxFCQ32sZPZkk7SY2ns5bQlKHYYA7R55XXX-3-CNcZ37eH5_1tctlIQoOqJrVC_A4iXkUB4zMTez7iLi9vsHH-c9-Q.XuOQSw.6kedFrorpj0NF5atU0H0M7kDKSk'

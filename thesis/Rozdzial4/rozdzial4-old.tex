@@ -1,0 +1,41 @@
+\chapter{Ilustracje}
+%=================================================================================================
+\section{Wprowadzenie}
+Często w opracowaniach zachodzi konieczność umieszczania różnego rodzaju zdjęć, wykresów, diagramów, algorytmów itp. różniących się jakością, rozmiarem oraz formatem zapisu grafiki. Różnice w elementach graficznych wynikające głownie z formatu zapisu mogę znacząco wpłynąć na jakość pracy. Korzystając z pakietu \LaTeX\ zaleca się, aby grafika umieszczana w opracowaniu zapisana była w formacie \textit{pdf} lub \textit{png}. Najwyższą jakość uzyskuję się zapisując elementy graficzne w formacie \textit{pdf}. Stosując ten format podczas skalowania elementu jego jakość graficzna będzie zawsze ta sama. Oczywiście pakiet \LaTeX\ wspiera również inne formaty zapisu, tj. \textit{jpg}, \textit{bmp}, itd.
+%=================================================================================================
+\section{Zasady stosowania ilustracji}
+Umieszczając elementy graficzne należy wziąć pod uwagę m.in. ich zawartość treściową, poprawność merytoryczną, kompletność zamieszczanych danych, a także poprawność użytych symboli graficznych, oznaczeń literowych, itd. Wszelkie ilustracje umieszczone w pracy powinny być wykonane w odpowiedniej skali, tak aby były zawsze czytelne. Dane oraz informacje zawarte w ilustracjach również powinny być odpowiednio dobrane pod względem ilościowym oraz jakościowym, a także odpowiednio rozmieszczone aby nie wpływać na czytelność ilustracji. Zaleca się aby wszystkie ilustracje umieszczane w pracy (o ile jest to możliwe) były tego samego formatu. Wpływa to na jakość oraz porządek opracowania. Ilustracje powinny być umieszczane w miejscu tekstu gdzie jest o nich mowa, a więc na tej samej stronie lub na stronie poprzedzającej lub następne, ale tak, żeby je można było oglądać łącznie z dotyczącym ich tekstem. Każda ilustracja powinna posiadać numer. Numeracja powinna być ciągła w obrębie  całego opracowania lub dwurzędowa i zgodna z numeracją tabel wzorów itd. Podpisy pod 
+ilustracjami powinny być umieszczane pod ilustracją. Wszelkie objaśnienia powinny być umieszczone 
+zaraz pod podpisem do ilustracji.
+%=================================================================================================
+\section{Przykłady}
+Poniżej podano kilka przykładów umieszczania ilustracji w tekście.
+\begin{figure}[h!]
+	\centering
+		\includegraphics[width=12cm]{Rysunki/Rozdzial4/sqrtsin.pdf}
+		\label{fig:przyklad3D}
+	\caption{Przykładowy wykres trójwymiarowy.}
+\end{figure}
+\newpage
+%-------------------------------------------------------------------------------------------------
+\begin{figure}[h!]
+  \centering
+  \subfloat[Wykres funkcji $\sin(x)$]{\label{fig:sinWyk}\includegraphics[width=0.45\textwidth]{Rysunki/Rozdzial4/sin.pdf}}\quad
+  \subfloat[Wykres funkcji $\cos(x)$]{\label{fig:cosWyk}\includegraphics[width=0.45\textwidth]{Rysunki/Rozdzial4/cos.pdf}}
+  \caption{Przykładowe wykresy funkcji $\sin (x)$ oraz $\cos (x)$ w przedziale $[-\pi, \pi]$.}
+  \label{fig:przyklad}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

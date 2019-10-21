@@ -1,0 +1,80 @@
+html {
+  font-family: 'Courier';
+  font-size: 16px;
+  word-spacing: 1px;
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+  height: 100vh;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  height: 100vh;
+}
+#__nuxt,
+#__layout {
+  height: 100vh;
+}
+
+.el-container {
+  height: 100%;
+}
+
+.header {
+  border-bottom: 1px solid #333;
+}
+
+.footer p {
+  font-size: 0.7rem;
+}
+
+.el-header, .el-footer {
+  color: #333;
+  text-align: center;
+  display: flex;
+  align-items: center;
+}
+
+.el-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.el-footer {
+  justify-content: center;
+  flex-direction: column;
+}
+
+.el-main {
+  color: #333;
+  display: flex;
+  justify-content: center;
+  line-height: 1.5rem;
+}
+
+body > .el-container {
+  margin-bottom: 40px;
+}
+
+a:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.el-card {
+  margin: 1rem;
+}
+
+.selected {
+  font-weight: bold;
+  color: red;
+}

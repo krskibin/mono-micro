@@ -1,0 +1,101 @@
+\chapter{Składanie wzorów}
+
+W tej części nie opisywano już samych zasad tworzenia dokumentu, a zamiast tego skupiono się na przedstawieniu kilku przykładowo złożonych wzorów. W źródłach szablonu możliwe jest sprawdzenie jak wzór był pisany z wykorzystaniem notacji \LaTeX\ oraz pakietu \AmS. Więcej szczegółów zawiera rozdział ósmy świetnego opracowania \cite{companion:04} oraz dokumentacja pakietu \cite{ams:02}.
+\begin{itemize}
+\item Wzór dzielony i wyrównywany do znaku
+\begin{equation}
+	\begin{split}
+		(a+b)^4  &= (a+b)^2 (a+b)^2 \\
+					&= (a^2+2ab+b^2)(a^2+2ab+b^2) \\
+					&= a^4+4a^3b+6a^2b^2+4ab^3+b^4. \\
+	\end{split}
+\end{equation}
+
+\item Wzór w kilku liniach
+\begin{multline}
+	a+b+c+d+e+f+g+h+i+j+k+l+m+n\\
+							o-p-r-s-t-u-w-x-y-z.
+\end{multline}
+
+\item Grupa wzorów
+\begin{gather}
+	a_1=b_1+c_1,\\
+	a_2=b_2+c_2-d_2+e_2.
+\end{gather}
+\item Wzory z wyrównywaniem do znaku i osobną numeracją
+\begin{align}
+	x^2+y^2	&= 1, 					& x^3+y^3	&=1, \\
+				x&=\sqrt{1-y^2},	& x 			&= \sqrt[3]{1-y^3}.
+\end{align}
+
+\begin{align}
+	a_{11}& =b_{11},&
+	a_{12}& =b_{12},\\
+	a_{21}& =b_{21},&
+	a_{22}& =b_{22}+c_{22}.
+\end{align}
+\item Wzory z wyrównywaniem do znaku oraz zewnętrznych marginesów i osobną numeracją 
+\begin{flalign}
+	a_{11}&	=b_{11},&
+	a_{12}&	=b_{12},\\
+	a_{21}&	=b_{21},&
+	a_{22}&	=b_{22}+c_{22}.
+\end{flalign}
+
+\item Klamra
+\begin{equation}
+P_{r-j}=\begin{cases}
+	0							& \text{jeśli $r-j$ jest nieparzyste},\\
+	r!\,(-1)^{(r-j)/2}	& \text{w przeciwnym razie}.
+\end{cases}
+\end{equation}
+
+\item Macierze
+\begin{equation}
+A=
+	\begin{bmatrix}
+		a	&	b	&	c		&	d	\\
+		b	&	a	&	c+d	&	c-d	\\
+		0	&	0	&	a+b	&	a-b	\\
+		0	&	0	&	ab		&	cd	\\
+	\end{bmatrix},
+\end{equation}
+
+\begin{equation}I_4=
+	\begin{pmatrix}
+			1 & 0 & 0 & 0 \\
+		 	0 & 1 & 0 & 0 \\
+			0 & 0 & 1 & 0 \\
+			0 & 0 & 0 & 1 \\ 
+	\end{pmatrix}
+,\quad
+\det{I_4}=
+	\begin{vmatrix}
+			1 & 0 & 0 & 0 \\
+		 	0 & 1 & 0 & 0 \\
+			0 & 0 & 1 & 0 \\
+			0 & 0 & 0 & 1 \\ 
+	\end{vmatrix}.
+\end{equation}
+
+\item Granica
+\begin{equation}
+\lim_{x\to 0}(1+x)^{\frac{1}{x}}=\mathrm{e}.
+\end{equation}
+\item Całka
+\begin{equation}
+\int_{0}^{1}3x^2\,\mathrm{d}x.
+\end{equation}
+\item Wzór z funkcjami trygonometrycznymi
+\begin{equation}
+\sin (\alpha \pm \beta) = \sin (\alpha) \cdot \cos (\beta) \pm \cos (\alpha) \cdot \sin (\beta).
+\end{equation} 
+
+\item Wzór Taylora
+\begin{equation}
+	\begin{split}f(x) &= f(a) + \frac{x-a}{1!} f^{(1)}(a) + \frac{(x-a)^2}{2!} f^{(2)}(a) + \ldots \\
+							&+ \frac{(x-a)^n}{n!} f^{(n)}(a) + R_n(x,a)\\
+							&= \sum\limits_{k=0}^n \left( \frac{(x-a)^k}{k!} f^{(k)}(a) \right) + R_n(x,a).
+	\end{split}
+\end{equation}
+\end{itemize}

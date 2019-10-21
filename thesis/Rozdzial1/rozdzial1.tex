@@ -1,0 +1,21 @@
+\chapter{Wstęp}
+%======================================================================================================
+Celem niniejszej pracy było zaprojektowanie aplikacji pod kątem architektury opartej~o podejście monolityczne~i mikrousługi. W jej ramach przygotowano dwa serwisy, a następnie starannie opisano proces ich implementacji~i konfigurację. Szczególnie ważne było to, aby oba serwisy były napisane~w ramach tych samych technologii~i narzędzi, tak żeby można je było odpowiednio porównać. Szczegółowo przedstawiono również proces konteneryzacji projektu, tak aby, mógł on zostać~w łatwy sposób zintegrowany~z platformą dostarczającą rozwiązania internetowe.
+
+W ramach porównania obu serwisów przeprowadzono testy wydajnościowe, sprawdzono możliwości skalowania aplikacji~i wpływ tej technologii na ich sprawność, a następnie poddano analizie dostarczone rozwiązania architektoniczne, łatwość wdrożenia~i wykorzystane technologię. Dzięki temu możliwe było opracowanie wniosków, których celem było wskazanie wad~i zalet, a także przypadków dla których najlepiej sprawuje się dana architektura.
+
+Tekst pracy oparto głownie~o pozycję \cite{Ziade:2018}, gdzie autor również przygotował aplikację opartą~o mikrousługi, opisał jej architekturę~i przedstawił narzędzia potrzebne do jej implementacji, ale także inne pozycje takie jak \cite{Rodger:2019}, czy \cite{Folwer:2019}, traktujące~o ideach stojących za oboma podejściami, ich charakterystykami, wadami~i zaletami. We wszystkich książkach znajdowały się cenne rozdział poświęcone analizie przypadków, czy pomysłami na wdrożenie konkretnej architektury.
+
+Przygotowana praca powinna pomóc~w wybraniu odpowiedniej architektury, przedstawiono~w niej proces przygotowania serwisu internetowego wraz~z analizą załączonego kodu. Czytelnik po jej przeczytaniu powinien móc odtworzyć prostą aplikację opartą~o oba podejścia, przygotować ich strukturę~i integrację~z środowiskiem produkcyjnym przy pomocy narzędzia do konteneryzacji. Następnie analizując badania~i ich wyniki, a także wnioski autora, móc wybrać najlepszą~z architektur dla jego własnego zastosowania.
+
+Praca składa się~z rozdziału \ref{roz2}., gdzie omówiono główne założenia aplikacji internetowych, a następnie wyjaśniono strukturę architektury monolitycznej~i podejścia opartego~o mikrousługi. Przedstawione zostało studium przypadku serwisu internetowego, gdzie wdrożony byłby model scentralizowany~i rozwiązanie oparte~o mniejsze usługi.
+
+W rozdziale \ref{roz3}. omówiono projekt dwóch serwisów internetowych, opisano jego założenia, możliwe problemy które mogą zaistnieć~w trakcie jego implementacji~i dostępne rozwiązania. Następnie uszczegółowiono architektury poszczególnych aplikacji. Wyjaśniono relację, które wykorzystane będą~w bazie danych, a także potrzebne biblioteki. Przeprowadzono również analizę wymagań funkcyjnych~i niefunkcyjnych, a także opisano środowisko programistyczne, które będzie potrzebne do uruchomienia projektu~i wspierane przeglądarki.
+
+Natomiast rozdziały \ref{roz4}. i \ref{roz5}. skupiają się na szczegółowym opisie implementacji danej architektury, są one podzielone według poszczególnych warstw biznesowych aplikacji.
+
+Problem integracji~z platformami dostarczającymi rozwiązania~w zakresie hostingu aplikacji opisano~w rozdziale \ref{roz6}. Przedstawiono~w nim proces konteneryzacji aplikacji, a także przygotowania jej środowiska deweloperskiego~i produkcyjnego, tak, aby można było~w łatwy sposób ją rozwijać, a także dostarczyć użytkownikom.
+
+W rozdziale \ref{roz7}. na środowisku produkcyjnym przeprowadzono  badania mające na celu sprawdzenie wydajności obu architektur. Przeanalizowano możliwości ich skalowania. Wpływ tego rozwiązania na sprawność systemu, a następnie analizie poddano cały projekt, tak, aby podsumować, która~z architektur jest łatwiejsza do implementacji.
+
+W ostatnim rozdziale \ref{roz8}. przedstawiono wnioski po implementacji~i przetestowaniu obu aplikacji, następnie wskazano charakterystyki obu architektur, ich wady~i zalety. Przedyskutowano osiągnięte rezultaty, a na końcu wskazano, dla jakiego przypadku najlepszym rozwiązaniem jest dane podejście.

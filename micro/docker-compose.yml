@@ -1,0 +1,93 @@
+version: "3"
+
+services:
+
+  db:
+    image: postgres:9.6.3
+    env_file: .env
+    volumes:
+      - .pgdata:/var/lib/postgresql/data
+
+
+  tasks:
+    env_file: .env
+    build:
+      context:
+        ./backend/tasks
+    stdin_open: true
+    tty: true
+    depends_on:
+      - db
+    environment:
+      - DISPLAY
+      - PYTHONDONTWRITEBYTECODE=1
+    command: python -m flask run --host 0.0.0.0
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./backend/tasks:/code
+      - ./backend/tasks/migrations:/code/migrations
+
+  tokens:
+    env_file: .env
+    build:
+      context:
+        ./backend/tokens
+    stdin_open: true
+    tty: true
+    environment:
+      - DISPLAY
+      - PYTHONDONTWRITEBYTECODE=1
+    command: python -m flask run --host 0.0.0.0
+    volumes:
+      - ./backend/tokens:/code
+      - ./backend/tokens/migrations:/code/migrations
+
+  users:
+    env_file: .env
+    build:
+      context:
+        ./backend/users
+    stdin_open: true
+    tty: true
+    depends_on:
+      - db
+    environment:
+      - DISPLAY
+      - PYTHONDONTWRITEBYTECODE=1
+    command: python -m flask run --host 0.0.0.0
+    ports:
+      - "5002:5000"
+    volumes:
+      - ./backend/users:/code
+      - ./backend/users/migrations:/code/migrations
+
+
+  frontend:
+    env_file: .env
+    build:
+      context:
+        ./frontend
+    stdin_open: true
+    tty: true
+    depends_on:
+      - db
+    command: yarn dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./frontend/assets:/code/assets
+      - ./frontend/components:/code/components
+      - ./frontend/layouts:/code/layouts
+      - ./frontend/middleware:/code/middleware
+      - ./frontend/pages:/code/pages
+      - ./frontend/plugins:/code/plugins
+      - ./frontend/static:/code/static
+      - ./frontend/store:/code/store
+      - ./frontend/.babelrc:/code/.babel.rc
+      - ./frontend/.editorconfig:/code/.editorconfig
+      - ./frontend/.eslintrc.js:/code/.eslintrc.js
+      - ./frontend/jsconfig.json:/code/jsconfig.json
+      - ./frontend/nuxt.config.js:/code/nuxt.config.js
+      - ./frontend/package.json:/code/package.json
+      - ./frontend/yarn.lock:/code/yarn.lock

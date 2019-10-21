@@ -1,0 +1,67 @@
+version: '3.7'
+
+services:
+  tasks:
+    build:
+      context: ./backend/tasks
+      dockerfile: Dockerfile.prod
+    command: gunicorn --bind 0.0.0.0:5000 main:app
+    expose:
+      - 5000
+    env_file:
+      - ./.env.prod
+    depends_on:
+      - db
+
+  users:
+    build:
+      context: ./backend/users
+      dockerfile: Dockerfile.prod
+    command: gunicorn --bind 0.0.0.0:5000 main:app
+    expose:
+      - 5001
+    env_file:
+      - ./.env.prod
+    depends_on:
+      - db
+
+  tokens:
+    build:
+      context: ./backend/tokens
+      dockerfile: Dockerfile.prod
+    command: gunicorn --bind 0.0.0.0:5000 main:app
+    env_file:
+      - ./.env.prod
+    depends_on:
+      - db
+
+  db:
+    image: postgres:12-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env.prod
+
+  nginx:
+    build: ./nginx
+    volumes:
+      - static_volume:/usr/src/app/static
+      - dist_volume:/usr/src/app/dist
+    ports:
+      - 80:80
+    depends_on:
+      - tasks
+
+  frontend:
+    env_file: .env
+    build:
+      dockerfile: Dockerfile.prod
+      context: ./frontend
+    volumes:
+      - static_volume:/usr/src/app/static
+      - dist_volume:/usr/src/app/dist
+
+volumes:
+  postgres_data:
+  static_volume:
+  dist_volume:

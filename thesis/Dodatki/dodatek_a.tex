@@ -1,0 +1,81 @@
+\chapter{Tabele wyników wykorzystanych do stworzenia wykresów}
+%=================================================================================================
+W ramach przeprowadzonych badań przygotowano następujące tabele, które następnie wykorzystano do stworzenia wykresów opracowanych w głównej części pracy:
+
+\begin{table}[h!]
+\centering
+\caption{Czasy żądań (ms) dla każdego z adresów w aplikacji monolitycznej.}
+\begin{tabular}{|l|r|r|r|}
+\hline
+\textbf{Adres}  & \textbf{średnia}   & \textbf{najszybszy} & \textbf{najwolniejszy} \\ \hline
+/index             & 0,8216 & 0,1702     & 1,0862 \\ \hline
+/index - logged    & 1,4356	& 0,1791	 & 1,7834 \\ \hline
+/login             & 1,2667	& 0,2167	 & 1,7762 \\ \hline
+/users - POST      & 1,2843	& 0,2329	 & 1,6195 \\ \hline
+/logout	           & 2,3735	& 0,7693	 & 3,7333 \\ \hline
+/tasks - GET       & 0,8025	& 0,0479     & 0,2177 \\ \hline
+/tasks - POST      & 1,8744	& 0,2447	 & 2,2621 \\ \hline
+/tasks/id.         & 1,7152	& 0,2233	 & 2,1407 \\ \hline
+/update-task/id    & 2,0891	& 0,9121	 & 3,6156 \\ \hline
+/delete-task/id    & 1,9022	& 0,3753	 & 2,2752 \\ \hline
+/404               & 0,5871	& 0,1475	 & 0,8700 \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{Średnie czasy żądań (\textit{ms}) w zależności od liczby posiadanej pamięci \textit{RAM} (\textit{GB}).}
+\begin{tabular}{|l|r|r|r|r|r|r|r|r|}
+\hline						
+\textbf{Serwis/ \textit{RAM}} & \textbf{1GB}  & \textbf{2GB}	& \textbf{3GB}	& \textbf{4GB}	& \textbf{GB}	& \textbf{6GB}	& \textbf{7GB}	& \textbf{8GB} \\ \hline
+mikrousługi  & 11,2469	& 6,8961	& 6,7101	& 6,5419 & 6,0812 & 6,3221	  & 5,991	& 5,5612 \\ \hline
+monolit	      & 8,6012	& 7,3012	& 6,4191	& 6,3814 & 6,1328 & 6,3112	  & 6,5312  & 5,7131 \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{Czasy żądań (ms) dla każdego z adresów w aplikacji opartej o mikrousługi.}
+\begin{tabular}{|l|r|r|r|}
+\hline
+\textbf{Adres}  & \textbf{średnia}   & \textbf{najszybszy} & \textbf{najwolniejszy} \\ \hline
+/index              & 0,5957	& 0,2217	& 0,9042 \\ \hline
+/index - logged     & 1,1632	& 0,2763	& 2,5775 \\ \hline
+/login              & 1,5587	& 0,6577	& 2,9107 \\ \hline
+/users - POST       & 2,3541	& 0,8331	& 3,0011 \\ \hline
+/users.             & 0,5594   	& 0,1804	& 0,8861 \\ \hline
+/logout             & 2,0031	& 0,9011	& 2,8993 \\ \hline
+/tasks - GET        & 0,5754	& 0,1902	& 0,8965 \\ \hline
+/tasks - POST		& 2,5665	& 0,5664	& 3,2221 \\ \hline
+/tasks/id - GET		& 1,1123	& 0,3561	& 2,4412 \\ \hline
+/tasks/id  - PUT	    & 4,5511	& 0,7656	& 3,7732 \\ \hline
+/tasks/id - DELETE  & 4,8133	& 0,5589	& 3,5581 \\ \hline
+/404				& 0,5605	& 0,1984	&0,74620 \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{Średnie czasy żądań(ms) w zależności od liczby rdzeni w procesorze (\textit{CPU}).}
+\begin{tabular}{|l|r|r|r|r|}
+\hline
+\textbf{Serwis/ \textit{CPU} (rdzenie)}       & \textbf{1}	& \textbf{2}	& \textbf{3}	 & \textbf{4} \\ \hline
+mikrousługi & 7,2156	& 7,0517	& 6,5919	& 6,6790 \\ \hline
+monolit	     & 7,0357	& 6,8230	& 6,3658	& 6,6058 \\ \hline
+\end{tabular}
+\end{table}
+
+
+\begin{table}[h!]
+\centering
+\caption{Średnie czasy żądań(ms) w zależności od liczby powielonych kontenerów na jeden serwis.}
+\begin{tabular}{|l|r|r|r|r|r|r|}
+\hline
+\textbf{Serwis/ Liczba kontenerów} &	\textbf{1}	    & \textbf{2}	        & \textbf{3}	        & \textbf{4}            & \textbf{5} \\ \hline
+mikrousługi	      & 7,0349	& 6,8001	& 6,6881	& 6,6766	    & 6,1601 \\ \hline
+monlit	          & 7,1432	& 6,7775	& 5,8308	& 5,2573	    & 4,5396 \\ \hline
+\end{tabular}
+\end{table}
+Badania przeprowadzono na maszynie wyposażonej w procesor \textit{2.7 GHz Intel Core i5} o pamięci RAM \textit{8 GB 1867 MHz DDR3}. Do ich zrobienia wykorzystano narzędzie \textit{Boom} w konfiguracji \textit{100} użytkowników, którzy wysyłali maksymalnie \textit{1000} żądań.
+%=================================================================================================
+ 

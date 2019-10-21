@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="index">
+    <div class="section">
+      <div class="subsection">
+        <h1>Welcome</h1>
+        <p>Awesome todo app</p>
+      </div>
+      <div class="subsection">
+        <h2>Microservices</h2>
+        <p>Example Microservice Frontend App for Master Thesis Purposes</p>
+        <p>Created in Vue Nuxt.js</p>
+      </div>
+    </div>
+    <el-button @click="seen = true">Button to check if vue works fine</el-button>
+    <el-dialog :visible.sync="seen" title="Hello world">
+      <p>Works fine!</p>
+    </el-dialog>
+  </div>
+</body>
+ <script>
+ const appIndex = new Vue({
+     el: '#index',
+     data() {
+         return %% data | tojson %%
+     }
+ });
+ </script>
+{% endblock %}

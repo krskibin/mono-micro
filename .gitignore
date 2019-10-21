@@ -1,0 +1,8 @@
+# Ingore auto-created MacOS files
+.DS_Store
+micro/venv
+mirco/.pgdata/
+mirco/.idea
+mono/.pgdata/
+node_modules/
+.pgdata/

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="tasks">
+    <h1>Hi, %% user.username %%!</h1>
+
+    <form action="" method="post" novalidate>
+        %% form.hidden_tag() %%
+        <p>
+            %% form.header.label %%<br>
+            %% form.header(size=64) %%<br>
+            {% for error in form.header.errors %}
+            <span style="color: red;">[%% error %%]</span>
+            {% endfor %}
+        </p>
+        <p>
+            %% form.body.label %%<br>
+            %% form.body(size=256) %%<br>
+            {% for error in form.body.errors %}
+            <span style="color: red;">[%% error %%]</span>
+            {% endfor %}
+        </p>
+        <p>%% form.submit() %%</p>
+    </form>
+    <div class="filtering" style="margin-top: 1rem;">
+         Filter tasks:
+         <a :class="{'selected': selected==='all'}" href="%% url_for('tasks')%%">show all</a>
+         <a :class="{'selected': selected==='done'}" href="?isDone=True">only done</a>
+         <a :class="{'selected': selected==='notdone'}" href="?isDone=False">only not done</a>
+    </div>
+
+
+     {% for task in tasks %}
+      <el-card class="box-card" shadow="never">
+          <div slot="header" class="clearfix">
+            <span>%% task.header %%</span>
+            <a href="%% url_for('task', id=task.id) %%" style="float: right" type="text">Edit</a>
+          </div>
+          <div class="text item">
+            %% task.body %%
+          </div>
+          <div class="text item">
+            is done: %% task.is_done %%
+          </div>
+      </el-card>
+    {% endfor %}
+</div>
+ <script>
+ const appTasks = new Vue({
+     el: '#tasks',
+     data() {
+         return {
+            selected: 'all',
+            hello: 'hello'
+         }
+     },
+     mounted() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const isDone = urlParams.get('isDone');
+        if (typeof isDone === 'Undefined' ) {
+            this.selected = 'all'
+        }
+        else if (isDone.toLowerCase() === 'false') {
+            this.selected = 'notdone'
+        }
+        else {
+            this.selected = 'done'
+        }
+     }
+ });
+ </script>
+{% endblock %}

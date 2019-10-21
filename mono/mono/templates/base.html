@@ -1,0 +1,53 @@
+<html>
+    <head>
+        {% if title %}
+        <title>%% title %% - MtTOODO</title>
+        {% else %}
+        <title>Welcome to MtTODO</title>
+        {% endif %}
+        <!-- Element UI CSS files -->
+        <link rel="stylesheet" href="%% url_for('static', filename='js/element-2.13.2/lib/theme-chalk/index.css') %%">
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="%% url_for('static', filename='css/main.css') %%">
+        <!-- Load VueJS -->
+        <script src="%% url_for('static', filename='js/min/vue.min.js')%%"></script>
+        <!-- Load ElementUI -->
+        <script src="%% url_for('static', filename='js/element-2.13.2/lib/index.js')%%"></script>
+    </head>
+    <body>
+    <section class="el-container is-vertical" id="base">
+        <hr>
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>%% message %%</li>
+            {% endfor %}
+        </ul>
+
+            {% endif %}
+            {% endwith %}
+        </hr>
+      <header class="el-header header" style="height: 60px;">
+        <div class="logo" style="display: flex; align-items: center;"><span style="font-size: 1.5rem; font-weight: bold;">MtTodo</span> &nbsp;  <span style="font-size: 0.8rem;">(mono)</span></div>
+        <div class="links">
+            {% if current_user.is_authenticated %}
+                <a href="%% url_for('tasks')%%">%% current_user.username %% tasks</a>
+                <a href="%% url_for('logout')%%">Logout</a>
+            {% else %}
+                <a href="%% url_for('index') %%">Home</a>
+                <a href="%% url_for('login') %%">Login</a>
+            {% endif %}
+        </div>
+      </header>
+      <main class="el-main main">
+        <div class="main-content">
+            {% block content %}{% endblock %}
+        </div>
+      </main>
+      <footer class="el-footer footer" style="height: 60px;">
+        <p>MtTodo Microservices 2020</p>
+        <p>Example Microservices app for Master Thesis purposes</p>
+      </footer>
+    </section>
+</html>

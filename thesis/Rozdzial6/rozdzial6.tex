@@ -1,0 +1,92 @@
+\chapter{Konteneryzacja}
+\label{roz6}
+%=================================================================================================
+Konteneryzacja aplikacji przy pomocy platformy \textit{Docker} zapewnia działanie systemu niezależnie od sprzętu programisty\cite{Ziade:2018}, ale również może być wykorzystana do stworzenia środowiska produkcyjnego\cite{Ziade:2018} i integracji~z wybraną infrastrukturą serwerową. Serwisy takie jak \textit{Amazon Web Services} posiadają gotowe rozwiązania do publikacji aplikacji wewnątrz kontenerów\cite{aws}.
+
+ W tym rozdziale przedstawione zostanie przygotowanie konfiguracji środowiska rozwojowego (deweloperskiego) i produkcyjnego przy wykorzystaniu narzędzi \textit{Docker}, \textit{Docker Compose}, aplikacji \textit{Gunicorn} i \textit{Nginx}\cite{Herman:2020}.
+ 
+ Fundamentem działania platformy są kontenery, czyli procesy systemu \textit{Linux} z dodatkowymi funkcjami pozwalającymi na ich izolację od maszyny użytkownika. Jednym~z aspektów, który pozwala na odseparowanie każdego~z kontenerów jest to, że posiadają one własny system plików dostarczany przez \textbf{obrazy Dockera} (ang. \textit{docker images}), które mają~w sobie wszystkie potrzebne zależności, pliki binarne~i kody źródłowe\cite{docker}. Ich ważną właściwością jest to, że łatwo możne je przenosić, dzięki czemu twórcy platformy \textit{Docker} stworzyli serwis \textit{Docker Hub} w którym są one przechowywane\cite{docker}. Każdy użytkownik może stworzyć własny obraz, a następnie go udostępnić innym, tak, aby bez problemu można było go wykorzystać~w tworzonej aplikacji. W efekcie każdy język programowania, wiele bibliotek~i narzędzi posiada swoje odpowiedniki~w formie obrazów \textit{Dockera}. Nie jest potrzebne instalowanie interpretera języka \textit{Python}, wystarczy, że zastanie pobrany odpowiedni obraz, z którego będzie można korzystać jak~z normalnie zainstalowanej wersji na fizycznej maszynie.
+ 
+\begin{lstlisting}[language=Bash, caption={Proces pobrania i wykorzystanie przykładowego obrazu \textit{Dockera}.}, label={code:docker}]
+$user@home: docker run  python:3.8.3-buster
+Unable to find image 'python:3.8.3-buster' locally
+3.8.3-buster: Pulling from library/python
+Status: Downloaded newer image for python:3.8.3-buster
+$user@home: docker image ls
+python              3.8.3-buster        659f826fabf4        3 weeks ago         934MB
+$user@home: docker run --name python -it python:3.8.3-buster
+Python 3.8.3 (default, May 16 2020, 07:08:28)
+[GCC 8.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>>
+\end{lstlisting}
+
+Każdy obraz, przechowywany na platformie \textit{Docker Hub}, poza nazwą posiada jeszcze, po dwukropku, numer wersji, a także, po myślniku, nazwę systemu, który został wykorzystany przy konteneryzacji. W przypadku listingu \ref{code:docker} jest to dystrybucji systemu \textit{Debian} o nazwie \textit{Buster}\footnote{Informację o wersjach systemu operacyjnego \textit{Debian} można znaleźć pod adresem: \url{https://www.debian.org/releases/}.}.
+
+Aplikacja \textit{Docker} może automatycznie tworzyć obrazy odczytując instrukcję~z pliku \textit{Dockerfile}. Jest to dokument tekstowy wykorzystujący specjalną składnie, dzięki której można zarządzać systemem znajdującym się wewnątrz kontenera, tak aby odtworzył on wymagane środowisko. W projekcie serwisu monolitycznego znajdują się dwa takie pliki pozwalające na zbudowanie obrazu, który uruchomi aplikację opartą~o bibliotekę \textit{Flask}. Pierwszy odpowiada za przygotowanie środowiska deweloperskiego, drugi produkcyjnego. \textit{Flask} posiada wbudowany serwer (\textit{flask run}), ale nie jest on przystosowany do bycia efektywnym, stabilnym~i bezpiecznym\cite{flask}. Wiele bibliotek ma podobne problemy~i także oferuje inne narzędzia do obsługi zapytań~w konfiguracji produkcyjnej\cite{django}. Aplikacje uruchomione przy wykorzystaniu narzędzi dostarczonych przez platformę są przystosowane do rozwijania, przekazywania błędów programiście~i prostego debugowania, ale nie są one zalecane do wykorzystania przy wdrożeniu, dlatego potrzebne są przynajmniej dwa pliki \textit{Dockerfile}.
+
+Pierwszy~z nich odpowiedzialny jest za środowisko deweloperskie. Najpierw pobiera on obraz \verb|python:3.8-alpine|, a następnie ustanawia obecny katalog jako \verb|/code|. Następnie kopiuje plik \textit{requirements.txt}, umieszczone są~w nim wszystkie wymagane biblioteki wraz~z ich wersjami. Kolejną czynnością jest zainstalowanie wymaganych przez system \textit{Linux} paczek, tak aby móc później zbudować potrzebne biblioteki języka \textit{Python}. Na końcu kopiowana jest zawartość całego folderu~w którym znajduje się plik \textit{Dockerfile} do systemu plików kontenera~i wcześniej ustawionego folderu \textit{WORKDIR}.
+
+\begin{lstlisting}[language=Bash, caption={Plik \textit{Dockerfile} wykorzystany do zbudowania obrazu aplikacji monolitycznej.}, label={code:dockerfile}]
+FROM python:3.8-alpine
+
+WORKDIR /code
+
+COPY requirements.txt .
+
+RUN \
+ apk add --no-cache postgresql-libs && \
+ apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev && \
+ python3 -m pip install -r requirements.txt --no-cache-dir && \
+ apk --purge del .build-deps
+
+COPY . .
+\end{lstlisting}
+
+\textit{Dockerfile} z listingu \ref{code:dockerfile} działa dla wszystkich aplikacji napisanych~w \textit{Flasku}, czyli również tych stworzonych na potrzeby rozwiązań mikrousługowych. Należało utworzyć je osobno dla każdej~z usług.
+
+Uruchamianie osobno kilku kontenerów, które~z sobą współpracują może być uciążliwe, a dodatkowo wymaga wpisywania wszystkich parametrów~w linii poleceń, dlatego twórcy platformy \textit{Docker} przygotowali narzędzie \textit{Docker Compose}. Pozwala ono na definiowanie~i uruchamianie kilku kontenerowych aplikacji, którymi można zarządzać poprzez odpowiednią konfigurację plików~o formacie \textit{YAML}, a następnie przy pomocy jednej komendy włączać wszystkie serwisy\cite{docker}. Będą one wówczas działać~w odizolowanym środowisku, wewnątrz którego kontenery mogą się między sobą porozumiewać\cite{docker}.
+
+Atutem takiego rozwiązania jest uproszczona integracja usługi bazodanowej~z resztą aplikacji. Wystarczy stworzyć prosty serwis~i podać odpowiedni obraz, a następnie udostępnić port, który zostanie wykorzystany do łączenia się między kontenerami. Niestety nie jest możliwe ustalenie, która usługa powinna uruchomić się najpierw, co~w rezultacie sprawia, że baza danych może być niedostępna przez pierwsze kilka sekund po starcie serwisu webowego. Nie jest to wadą tego rozwiązania, ale warto~o tym pamiętać. Istniej parę skryptów dostępnych~w serwisie \textit{Github}, które sprawiają, że można ten błąd naprawić, jeden~z nich został wykorzystany przy implementacji środowiska produkcyjnego\footnote{Wspomniany skrypt został udostępniony~w artykule \cite{Herman:2020} na podstawie, którego została przygotowana konfiguracja produkcyjna.}.
+
+\begin{lstlisting}[language=Bash, caption={Plik \textit{docker-compose.yml} wykorzystany do uruchomienia aplikacji monolitycznej.}, label={code:dockercompose}]
+version: '3'
+services:
+  db:
+    image: postgres:12
+    env_file: .env
+    volumes:
+      - .pgdata:/var/lib/postgresql/data
+
+  web:
+    env_file: .env
+    build: .
+    depends_on:
+      - db
+    command: python -m flask run --host 0.0.0.0
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mono:/code/mono
+      - ./bin:/code/bin
+      - ./.env:/code/.env
+      - ./main.py:/code/main.py
+      - ./config.py:/code/config.py
+      - ./migrations:/code/migrations
+\end{lstlisting}
+
+Każda konfiguracja \textit{Docker Compose} wymaga podania numeru wersji, tak aby program mógł odpowiednio rozpoznać strukturę pliku. Następnie wyróżniona jest specyfikacja dla serwisów (można też skonfigurować sieci lub wolumeny\cite{docker}), ich nazwa, a później poszczególne właściwości, takie jak pliki konfiguracyjne~z których mają korzystać, miejsce gdzie znajduje się \textit{Dockerfile} (klucz \textit{build}), komenda uruchamiająca aplikację, porty, które mają zostać udostępnione. Na końcu mapowany jest system plików, tak aby byłby one dostępne wewnątrz kontenera~i narzędzie mogło~z nich skorzystać~w celu uruchomienia aplikacji.
+
+Podany \verb|env_file|, to plik tekstowy przechowujący zmienne systemu \textit{Linux}\cite{docker}, takie jak \textit{secret key} aplikacji, dane~o nazwie, użytkowniku~i haśle do bazy danych, dlatego nie powinien on być dostępny publicznie, w szczególności zapisywany~w repozytorium. Zwyczajem jest tworzenie szablonu takiego pliku, tak aby programista mógł go skopiować, a następnie tylko wypełnić odpowiednimi informacjami. 
+
+W przypadku aplikacji opartej~o mikroserwisy, plik~z listingu \ref{code:dockercompose} posiada zamiast jednego serwisu \textit{web} trzy: \textit{users}, \textit{tasks}, \textit{tokens} o bardzo podobnej konfiguracji, z tą różnicą, że wartości portów muszą być dla nich inne, tak, aby dwie aplikacje nie działały na jednym. Usługa \textit{tokens} w ogóle nie udostępnia portu\footnote{Zgodnie~z założeniami usługi do uwierzytelniania (rozdz. \ref{sec:autentykacja}) nie może być ona dostępna zewnątrz klastra kontenerów.}.
+
+Innym istotnym faktem, jest to, że aplikacje napisane~w bibliotece \textit{Flask}, aby były dostępne zewnątrz kontenera muszą być uruchomione na hoście \verb|0.0.0.0|, jest to konwencja pozwalająca na przekazanie systemowi operacyjnemu, aby nasłuchiwał żądań serwera dla wszystkich publicznych adresów \textit{IP}\cite{flask}. Sprawia to, że można się~z aplikacją połączyć~w ramach fizycznej maszyny, na której działa, wykorzystując na przykład przeglądarkę~i wpisując~w niej adres \url{http://localhost:5000}.
+
+Do uruchomienia aplikacji~z wykorzystaniem narzędzia \textit{Docker Compose} należy~w folderze, gdzie znajduje się plik~z konfiguracją wpisać~w terminalu \verb|docker-compose up|, wówczas wszystkie kontenery najpierw się zbudują, a następnie uruchomią. Proces budowy można wymusić przy pomocy komendy \verb|docker-compose build|. W celu wyłączenia kontenerów można spróbować przerwać proces wciskając kombinację klawiszy \textit{control+c}, gdy to się nie powiedzie, to należy wpisać komendę \\ \verb|docker-compose down| i poczekać na informację~o zakończeniu ich działania\cite{docker}.
+
+W aplikacji opartej~o mikrousługi jest jeszcze konfiguracja serwisu odpowiedzialnego za dostarczenie interfejsu użytkownika. Wykorzystuje ona obraz \\ \verb|node:14.1.0-strech| w którym zainstalowane jest narzędzie \textit{Yarn} (jego opis znajduje się~w rozdziale \ref{sec:ui}), które instaluje wszystkie wymagane moduły~w folderze \verb|/tmp/node_modules|, a następnie kopiuje je do projektu~w systemie plików kontenera. W pliku \textit{docker-compose.yml} serwis nazywa się \textit{frontend} i jest uruchamiany komendą \verb|yarn dev|. Ma on ustawione przekierowanie na porty \textit{8000:8000} i również~w tym przypadku należy ustawić zmienną host na \verb|0.0.0.0|, aby kontener był dostępny~z zewnątrz. Zmiana tej właściwości nie jest możliwa poprzez konfiguracje \\ \textit{docker-compose.yml} ale dodanie odpowiedniej opcji~w pliku \textit{nuxt.config.js}\cite{nuxtjs}.
+
+Konfiguracja produkcyjna przechowywana jest~w oddzielnych plikach \textit{Dockerfile.prod} i \textit{docker-compose.prod.yml}. W przypadku aplikacji opartych~o bibliotekę \textit{Flask}. Proces budowy obrazu posiada dwie fazy\cite{Herman:2020}. Pierwsza ma za zadanie zbudowanie jej do pakietu \textit{wheel} przy pomocy komendy \verb|pip wheel|. W drugiej natomiast pakiet ten jest instalowany, a następnie serwowany przy pomocy aplikacji \textit{Gunicorn}, która odpowiada za obsługę żądań. W przypadku plików statycznych są one dzielone między serwisy \textit{web}, a \textit{nginx} przy wykorzystaniu wspólnych \textit{wolumenów}\cite{docker}. Tworzone są one~z użyciem \textit{Dockerfile}'a~w katalogu \verb|./nginx|, wewnątrz którego usuwany jest domyślny plik~z ustawieniami (\textit{default.conf}), a kopiowany jest ten~z dysku maszyny fizycznej(\textit{nginx.conf}). W nim również znajduje się konfiguracja \textit{load balancera}\cite{nginx}. Ustawiony jest serwer nadrzędny (ang. \textit{upstream}), który wykorzystuje aplikację \textit{Gunicorn}, a następnie~w sekcji serwer podawana jest jego lokalizacja jako \textit{proxy\_pass}, dzięki czemu każde zapytanie jest odpowiednio do niego przydzielane. Ostatnią czynnością jest podanie ścieżki do plików statycznych, tak aby były one dostępne dla serwisu pod adresem \verb|/static/|. W przypadku aplikacji opartej~o mikrousługi podane są dwa serwery nadrzędne, a lokalizacja \verb|\| odpowiada ścieżce do zbudowanych\footnote{W celu zbudowania projektu wykorzystano komendę \textit{yarn generate}, która tworzy aplikację jako strukturę statycznych plików \textit{HTML} w katalogu \textit{dist}.} plików projektu \textit{Nuxt.js}\cite{nuxtjs}. W tym miejscu zamiast serwera \textit{proxy} wykorzystana jest opcja \textit{try\_files}\cite{nginx}. Po zakończeniu konfiguracji wszystkie włączone usługi powinny być dostępne pod jednym adresem \verb|http://localhost:80/|. Podczas uruchamiania narzędzia \textit{Docker Compose} należy pamiętać~o wpisaniu polecanie uwzględniającego konfigurację produkcyjną: \verb|docker-compose -f docker-compose.prod.yml up|.
+
+W przypadku integracji~z dowolna platformą dostawcy usług internetowych wystarczy, że będzie ona posiadać zainstalowaną usługę \textit{Docker} (lub będzie można ją doinstalować), następnie wystarczy zmodyfikować konfigurację serwera, tak, aby przekierowała ona wszystkie połączenia do serwera nadrzędnego, który będzie ustawiony pod adresem \verb|http://localhost:80/|. Dla platformy \textit{AWS} jest to odpowiednie nadpisanie zmiennych globalnych narzędzia \textit{Amazon Elastic Container Service}\cite{aws}. Natomiast~w przypadku prywatnych wirtualnych serwerów \textit{VPS} należy zainstalować na nich usługę \textit{Nginx} i~w podobny sposób jak przy konfiguracji kontenera dodać serwer nadrzędny~i wykorzystać opcję \textit{proxy\_pass} do przekierowania żądań do aplikacji~w kontenerze\footnote{Link do artykuły wyjaśniającego konfigurację na platformie \textit{DigitalOcean}: \url{https://www.digitalocean.com/community/tutorials/docker-explained-how-to-containerize-and-use-nginx-as-a-proxy} (autor: O.S Tezer, data publikacji: 16.12.2013).}.

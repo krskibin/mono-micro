@@ -1,0 +1,28 @@
+version: '3'
+services:
+  db:
+    image: postgres:12-alpine
+    env_file: .env
+    volumes:
+      - .pgdata:/var/lib/postgresql/data
+
+  web:
+    env_file: .env
+    build: .
+    stdin_open: true
+    tty: true
+    depends_on:
+      - db
+    environment:
+      - DISPLAY
+      - PYTHONDONTWRITEBYTECODE=1
+    command: python -m flask run --host 0.0.0.0
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mono:/code/mono
+      - ./bin:/code/bin
+      - ./.env:/code/.env
+      - ./main.py:/code/main.py
+      - ./config.py:/code/config.py
+      - ./migrations:/code/migrations

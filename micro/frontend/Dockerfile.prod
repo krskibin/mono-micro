@@ -1,0 +1,22 @@
+#----------------------------------------------
+
+# FRONTEND BUILDER
+
+FROM node:10.17.0-stretch
+
+
+# Proxy
+ARG PROXY
+
+ENV http_proxy=$PROXY https_proxy=$PROXY no_proxy="backend,localhost"
+
+WORKDIR /usr/src/app/
+COPY package.json /tmp/
+
+RUN cd /tmp && yarn install --verbose
+RUN cp -a /tmp/node_modules .
+
+COPY dist dist
+COPY static static
+
+RUN ln -s /tmp/package.json package.json
